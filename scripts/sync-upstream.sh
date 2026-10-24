@@ -24,7 +24,7 @@ git fetch -q "$UPSTREAM" main:refs/remotes/upstream/main || fail "拉取上游�
 UP_SHA=$(git rev-parse upstream/main)
 BASE=$(cat "$MARKER" 2>/dev/null || echo "$DEFAULT_BASE")
 git cat-file -e "$BASE^{commit}" 2>/dev/null || fail "基线 $BASE 不在本地对象库（请先 fetch 全部历史）"
-[ "$BASE" = "$UP_SHA" ] && { log "无更新（已是最新 $UP_SHA）"; exit 0; }
+[ "$BASE" = "$UP_SHA" ] && { log "无更新（已是最新 ${UP_SHA}）"; exit 0; }
 
 COMMITS=$(git rev-list --reverse "$BASE..upstream/main")
 [ -z "$COMMITS" ] && { log "无更新"; exit 0; }
