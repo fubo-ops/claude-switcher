@@ -22,7 +22,7 @@ fail() { echo "SYNC: FAIL: $*"; exit 1; }
 
 deploy_local() {
   local changed="$1"
-  local cnf; cnf=$(printf '%s\n' "$changed")
+  local cnf; cnf=$(printf '%b\n' "$changed")
   local appdir="$HOME/Applications/Claude切换器.app"
   local core="$HOME/.local/bin/claude-switch.sh"
   local touched_admin=""
