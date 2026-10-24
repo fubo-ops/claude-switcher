@@ -4,7 +4,7 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-UPSTREAM="https://github.com/fubo-ops/claude-switcher"
+UPSTREAM="https://github.com/YOURSJEYO/claude-switcher"
 MARKER="$HOME/.claude-switcher/upstream-last-sha"
 DEFAULT_BASE="179a38bfdb61c834e4e6d044c82308ecf9bf29a6"
 LOCK="/tmp/claude-switcher-sync.lock"
