@@ -4,7 +4,7 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-UPSTREAM="https://github.com/YOURSJEYO/claude-switcher"
+UPSTREAM="https://github.com/fubo-ops/claude-switcher"
 MARKER="$HOME/.claude-switcher/upstream-last-sha"
 DEFAULT_BASE="179a38bfdb61c834e4e6d044c82308ecf9bf29a6"
 LOCK="/tmp/claude-switcher-sync.lock"
@@ -56,7 +56,7 @@ done
 # 品牌统一：不允许上游账号/域名回流
 if git grep -l 'YOURSJEYO' >/dev/null 2>&1; then
   git grep -l 'YOURSJEYO' | while read -r f; do
-    sed -i '' 's|YOURSJEYO/claude-switcher|fubo-ops/claude-switcher|g; s|yoursjeyo\.github\.io/claude-switcher|fubo-ops.github.io/claude-switcher|g' "$f"
+    sed -i '' 's|fubo-ops/claude-switcher|fubo-ops/claude-switcher|g; s|yoursjeyo\.github\.io/claude-switcher|fubo-ops.github.io/claude-switcher|g' "$f"
   done
   log "已重新统一仓库地址"
 fi
