@@ -60,7 +60,7 @@ cd claude-switcher
 1. 识别代理客户端与代理组
 2. 按出口 IP 锁定 `国家 / 时区 / 地区格式`
 3. 安装核心脚本到 `~/.local/bin/claude-switch.sh`
-4. 现场编译 `Claude切换器.app` 到桌面
+4. 现场编译 `Claude切换器.app` 并安装到 `~/Applications`（不占桌面）
 5. 安装 root 守护进程（Kill-Switch / 时区看门狗）与用户态自动更新
 6. 跑一遍 14 项自检
 
@@ -68,7 +68,7 @@ cd claude-switcher
 
 ## 使用
 
-1. 双击桌面「Claude切换器」→ 等 14 项检查
+1. 打开 `~/Applications/Claude切换器.app`（启动台/Spotlight 搜「Claude切换器」）→ 等 14 项检查
 2. 全绿 → 选账号 A（首次会把当前登录收编为 A）或 B
 3. 之后 A/B 随切随用；换国家节点后先跑一次 `set-region`
 4. 菜单栏盾牌随时可看状态、重查、切号

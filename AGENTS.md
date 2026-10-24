@@ -7,7 +7,7 @@
 
 ## 你的任务
 
-帮助用户在 macOS 上安装并配置「Claude 切换器」：一个带环境安检的 Claude 账号启动/切换工具。目标状态是：**用户双击桌面图标，14 项安全检查全部通过，可以正常启动 Claude**。
+帮助用户在 macOS 上安装并配置「Claude 切换器」：一个带环境安检的 Claude 账号启动/切换工具。目标状态是：**用户从 `~/Applications` 打开 App，14 项安全检查全部通过，可以正常启动 Claude**。
 
 ## 开始之前：必须先确认的前置条件
 
@@ -48,7 +48,7 @@
 ## 验收标准（全部满足才算装完）
 
 - 终端执行 `~/.local/bin/claude-switch.sh checkdetail` 输出 14 行且全部 `=ok`
-- 双击桌面 App，界面全绿，能正常启动 Claude
+- 从 `~/Applications/Claude切换器.app` 打开，界面全绿，能正常启动 Claude
 - `launchctl print system/local.claude-bodyguard`、`system/local.tz-watchdog` 与 `gui/$(id -u)/local.claude-update` 均能查到（服务已注册）
 - `/Library/Application Support/claude-switcher/` 下两个守护脚本属 root:wheel、权限 755，当前用户不可写
 - 切换一次账号 B 再切回 A，A 的登录态完好
@@ -120,7 +120,7 @@ Linux 用户使用 `linux/` 下的 bash 版本。**开始之前必须先理解�
 **除非维护者在当次对话中明确要求，否则不得更新/部署维护者本机的已安装版本。** 具体包括：
 
 - 不得覆盖 `~/.local/bin/claude-switch.sh`、`~/.local/bin/local.claude-*.plist`
-- 不得重新编译或替换桌面 App（`~/Desktop/Claude切换器.app`）
+- 不得重新编译或替换桌面 App（`~/Applications/Claude切换器.app`）
 - 不得改动 `/Library/Application Support/claude-switcher/`、`/Library/LaunchDaemons/local.claude-*`、`~/Library/LaunchAgents/local.claude-*`
 - 不得触发本机 `update`、不得执行安装器/卸载器
 

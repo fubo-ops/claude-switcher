@@ -145,9 +145,9 @@ cp "$REPO/daemons/local.claude-bodyguard.plist" "$REPO/daemons/local.tz-watchdog
 sed "s|__HOME__|$H|g" "$REPO/daemons/local.claude-update.plist" > "$H/.local/bin/local.claude-update.plist"
 echo "✓ 核心文件已安装"
 
-# ---- 4. 现场编译 App 到桌面 ----
-APP="$H/Desktop/Claude切换器.app"
-mkdir -p "$H/Desktop"
+# ---- 4. 现场编译 App 到 ~/Applications ----
+APP="$H/Applications/Claude切换器.app"
+mkdir -p "$H/Applications"
 pkill -x ClaudeSwitcher 2>/dev/null
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -193,7 +193,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </plist>
 EOF
 codesign --force --deep -s - "$APP" >/dev/null 2>&1 || true
-echo "✓ App 已放到桌面"
+echo "✓ App 已安装到 ~/Applications"
 
 # ---- 5. 写入置顶规则(仅 Clash Verge;智能合并不覆盖已有配置;其他客户端自行配置) ----
 if [ "$MODE" = "clash-verge" ]; then
@@ -279,7 +279,7 @@ echo "=================================="
 echo ""
 echo "=================================="
 echo "  ✅ 安装完成!"
-echo "  使用: 双击桌面「Claude切换器」"
+echo "  使用: 打开 ~/Applications/Claude切换器.app（启动台/Spotlight 搜「Claude切换器」）"
 echo "  首次使用: 打开后选账号A(自动收编当前登录)"
 echo "  换了其他国家节点后: 运行 claude-switch.sh set-region 一键重新适配"
 echo "  自动更新已启用(每12小时检查一次),也可手动: claude-switch.sh update"
