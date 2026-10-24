@@ -435,6 +435,11 @@ enum WindowBridge {
         if window == nil {
             window = NSApp.windows.first(where: { $0.contentViewController != nil && $0.canBecomeMain })
         }
+        // 兜底：关掉系统可能重复创建的同尺寸窗口（历史 bug：反复 open 会出现多个主窗口）
+        for w in NSApp.windows where w !== window && w.canBecomeMain && w.contentViewController != nil
+            && abs(w.frame.width - 440) < 2 {
+            w.close()
+        }
         window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -965,7 +970,8 @@ struct SwitcherApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup {
+        // 用 Window 而不是 WindowGroup：系统不会在 reopen 时重复创建窗口
+        Window("Claude 切换器", id: "main") {
             ContentView(vm: VM.shared)
                 .background(WindowAccessor { win in
                     guard let w = win else { return }

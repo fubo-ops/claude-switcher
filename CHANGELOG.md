@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2（2026-10-24）
+
+### 修复
+- 反复打开 App 会创建重复主窗口：改用单例 `Window` 场景，并在唤起时兜底关闭重复窗口
+- Info.plist 增加 `LSMultipleInstancesProhibited`，版本号升到 2.2
+
+
 ## v2.1（2026-10-24）
 
 ### 新增
