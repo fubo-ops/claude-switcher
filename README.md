@@ -109,7 +109,7 @@ installer/              # macOS 安装/卸载
 windows/ linux/         # Windows / Linux 移植版（Beta）
 docs/                   # Web 检测页（GitHub Pages）
 scripts/gen-sums.sh     # 重新生成 SHA256SUMS
-tests/                  # 隔离回归测试
+tests/                  # 隔离回归测试 + 测试用例（测试用例.md）
 ```
 
 自动更新：`update --auto` 每 12 小时检查一次，按 `SHA256SUMS` 校验工件，失败自动回滚。
