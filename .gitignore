@@ -6,3 +6,5 @@ last-check.txt
 *.log
 
 _trash/
+__pycache__/
+*.pyc

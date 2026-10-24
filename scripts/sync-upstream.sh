@@ -53,18 +53,16 @@ for c in $COMMITS; do
   fi
 done
 
-# 品牌统一：不允许上游账号/域名回流
-if git grep -l 'YOURSJEYO' >/dev/null 2>&1; then
-  git grep -l 'YOURSJEYO' | while read -r f; do
-    sed -i '' 's|fubo-ops/claude-switcher|fubo-ops/claude-switcher|g; s|yoursjeyo\.github\.io/claude-switcher|fubo-ops.github.io/claude-switcher|g' "$f"
-  done
-  log "已重新统一仓库地址"
-fi
-git grep -l 'yoursjeyo\.github\.io' >/dev/null 2>&1 && {
-  git grep -l 'yoursjeyo\.github\.io' | while read -r f; do
-    sed -i '' 's|yoursjeyo\.github\.io/claude-switcher|fubo-ops.github.io/claude-switcher|g' "$f"
-  done
-}
+# 品牌统一：不允许上游账号/域名回流（脚本自身除外）
+FILES=$(git grep -l 'YOURSJEYO' -- . ':!scripts/sync-upstream.sh' 2>/dev/null || true)
+[ -n "$FILES" ] && echo "$FILES" | while read -r f; do
+  sed -i '' 's|YOURSJEYO/claude-switcher|fubo-ops/claude-switcher|g' "$f"
+done
+FILES2=$(git grep -l 'yoursjeyo\.github\.io' -- . ':!scripts/sync-upstream.sh' 2>/dev/null || true)
+[ -n "$FILES2" ] && echo "$FILES2" | while read -r f; do
+  sed -i '' 's|yoursjeyo\.github\.io/claude-switcher|fubo-ops.github.io/claude-switcher|g' "$f"
+done
+[ -n "$FILES" ] && log "已重新统一仓库地址"
 
 # 校验清单必须与当前文件一致
 bash scripts/gen-sums.sh >/dev/null || fail "生成 SHA256SUMS 失败"
@@ -79,6 +77,7 @@ swiftc -O -parse-as-library -target "$(uname -m)-apple-macos13.0" app/main.swift
 "$BUILD" --selftest >/tmp/sync-selftest.log 2>&1 || { tail -10 /tmp/sync-selftest.log; rm -f "$BUILD"; fail "App 自检失败"; }
 grep -q 'SELFTEST: PASS' /tmp/sync-selftest.log || { rm -f "$BUILD"; fail "App 自检未通过"; }
 rm -f "$BUILD"
+find . -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true
 log "测试通过（单测 + 编译 + selftest）"
 
 if [ -n "$(git status --porcelain)" ]; then
