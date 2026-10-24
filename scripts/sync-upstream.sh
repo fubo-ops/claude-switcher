@@ -22,27 +22,44 @@ fail() { echo "SYNC: FAIL: $*"; exit 1; }
 
 deploy_local() {
   local changed="$1"
+  local cnf; cnf=$(printf '%s\n' "$changed")
   local appdir="$HOME/Applications/Claude切换器.app"
   local core="$HOME/.local/bin/claude-switch.sh"
   local touched_admin=""
-  echo "$changed" | grep -qE '^(daemons/|installer/)' && touched_admin="yes"
-  if echo "$changed" | grep -q '^core/claude-switch.sh'; then
-    cp "$core" "$core.bak.$(date +%s)" 2>/dev/null || true
+  printf '%s\n' "$cnf" | grep -qE '^(daemons/|installer/)' && touched_admin="yes"
+  if printf '%s\n' "$cnf" | grep -q '^core/claude-switch.sh'; then
+    cp "$core" "$core.bak"
     cp core/claude-switch.sh "$core.new"
-    grep -E '^(PROXY_MODE|PROXY_GROUP|COUNTRY_TARGET|TZ_TARGET|LOCALE_TARGET)="' "$core" > /tmp/cs-conf.txt 2>/dev/null || true
-    while IFS= read -r line; do
-      key="${line%%=*}"
-      [ -n "$key" ] && sed -i '' "s|^${key}=.*|${line}|" "$core.new"
-    done < /tmp/cs-conf.txt
+    python3 - "$core.bak" "$core.new" <<'PYEOF'
+import re, sys
+old, new = sys.argv[1], sys.argv[2]
+keys = ["PROXY_MODE","PROXY_GROUP","COUNTRY_TARGET","TZ_TARGET","LOCALE_TARGET"]
+vals = {}
+for line in open(old, encoding="utf-8"):
+    m = re.match(r'^(PROXY_MODE|PROXY_GROUP|COUNTRY_TARGET|TZ_TARGET|LOCALE_TARGET)=(.*)$', line.rstrip("\n"))
+    if m: vals[m.group(1)] = m.group(2)
+out = []
+for line in open(new, encoding="utf-8"):
+    m = re.match(r'^(PROXY_MODE|PROXY_GROUP|COUNTRY_TARGET|TZ_TARGET|LOCALE_TARGET)=', line)
+    if m and m.group(1) in vals:
+        out.append(m.group(1) + "=" + vals[m.group(1)] + "\n")
+    else:
+        out.append(line)
+open(new, "w", encoding="utf-8").writelines(out)
+PYEOF
     mv "$core.new" "$core"; chmod +x "$core"
-    "$core" check >/tmp/cs-check.log 2>&1 || log "注意：更新后 check 未通过（$(cat /tmp/cs-check.log)）"
-    log "已更新本机核心脚本（保留地区/代理配置）"
+    if "$core" check >/tmp/cs-check.log 2>&1; then
+      log "已更新本机核心脚本（配置已保留，check 通过）"
+    else
+      cp "$core.bak" "$core"; chmod +x "$core"
+      log "FAIL: 更新后 check 未通过，已回滚本机核心（$(cat /tmp/cs-check.log)）"
+    fi
   fi
-  if echo "$changed" | grep -q '^core/stun-probe.py'; then
+  if printf '%s\n' "$cnf" | grep -q '^core/stun-probe.py'; then
     cp core/stun-probe.py "$HOME/.claude-switcher/stun-probe.py"
     log "已更新 STUN 探针"
   fi
-  if echo "$changed" | grep -q '^app/'; then
+  if printf '%s\n' "$cnf" | grep -q '^app/'; then
     if [ -d "$appdir" ]; then
       if swiftc -O -parse-as-library -target "$(uname -m)-apple-macos13.0" app/main.swift -o /tmp/cs-app-new -framework SwiftUI -framework AppKit >/tmp/deploy-build.log 2>&1; then
         pkill -x ClaudeSwitcher 2>/dev/null || true; sleep 1
@@ -63,7 +80,7 @@ deploy_local() {
 }
 
 if [ "${MODE:-}" = "deploy-only" ]; then
-  deploy_local "core/claude-switch.sh core/stun-probe.py app/main.swift"
+  deploy_local "core/claude-switch.sh\ncore/stun-probe.py\napp/main.swift"
   exit 0
 fi
 
