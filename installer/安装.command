@@ -113,6 +113,13 @@ mkdir -p "$H/.local/bin" "$H/.claude-switcher" "$H/Library/Logs"
 cp "$REPO/core/claude-switch.sh" "$H/.local/bin/"
 cp "$REPO/core/stun-probe.py" "$H/.claude-switcher/"
 chmod +x "$H/.local/bin/claude-switch.sh"
+# 网络自动恢复守护（用户态，只做 scutil/open，无需 root）
+SVC=""
+[ "$MODE" = "shadowrocket" ] && SVC="Shadowrocket"
+sed -e "s|__HOME__|$H|g" -e "s|__PROXY_MODE__|$MODE|g" -e "s|__PROXY_SERVICE__|$SVC|g" \
+    "$REPO/daemons/claude-netguard.sh" > "$H/.local/bin/claude-netguard.sh"
+chmod +x "$H/.local/bin/claude-netguard.sh"
+sed "s|__HOME__|$H|g" "$REPO/daemons/local.claude-netguard.plist" > "$H/.local/bin/local.claude-netguard.plist"
 # 写入探测到的客户端/代理组名/地区目标
 sed -i '' \
     -e "s|^PROXY_MODE=\".*\"|PROXY_MODE=\"$MODE\"|" \
@@ -242,6 +249,15 @@ ASEOF
         echo "✓ 自动更新服务已注册(每12小时检查一次)"
     else
         echo "⚠️  自动更新服务注册失败,可手动保底: claude-switch.sh update"
+    fi
+
+    # 网络自动恢复守护:用户态 LaunchAgent(每10秒),断网 15s 后自动重连
+    cp "$H/.local/bin/local.claude-netguard.plist" "$H/Library/LaunchAgents/local.claude-netguard.plist"
+    launchctl bootout "gui/$(id -u)/local.claude-netguard" 2>/dev/null
+    if launchctl bootstrap "gui/$(id -u)" "$H/Library/LaunchAgents/local.claude-netguard.plist" 2>/dev/null; then
+        echo "✓ 网络自动恢复守护已注册(断网 15s 自动重连)"
+    else
+        echo "⚠️  网络自动恢复守护注册失败,可手动: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/local.claude-netguard.plist"
     fi
 fi
 

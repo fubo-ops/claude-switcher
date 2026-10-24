@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- launchd 模板：安装到 ~/Library/LaunchAgents（用户态运行，只做 scutil/open，不需要 root） -->
+<plist version="1.0"><dict>
+	<key>Label</key><string>local.claude-netguard</string>
+	<key>ProgramArguments</key><array><string>/bin/bash</string><string>__HOME__/.local/bin/claude-netguard.sh</string></array>
+	<key>StartInterval</key><integer>10</integer>
+	<key>RunAtLoad</key><true/>
+</dict></plist>

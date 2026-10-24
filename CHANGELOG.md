@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.1（2026-10-24）
+
+### 新增
+- 网络自动恢复守护 `local.claude-netguard`（用户态 LaunchAgent，10s 巡检）
+  - 隧道异常中断 15s 后自动重连：先 `scutil --nc start`，失败再拉起代理客户端
+  - 失败每 20s 重试，最多 5 分钟；用户主动关闭代理超过 5 分钟不再介入
+  - 日志：`~/Library/Logs/claude-netguard.log`
+- 安装器自动注册该守护，`uninstall` 时随卸载清理
+
 ## v2.0（2026-10-24）
 
 ### 新增
