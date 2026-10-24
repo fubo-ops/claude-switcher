@@ -1,0 +1,10 @@
+NOTICE
+======
+
+本项目包含衍生自开源项目 claude-switcher 的代码与设计。
+原始版权声明已按 MIT 许可要求保留在 LICENSE 中
+（Copyright (c) 2026 Claude Switcher Contributors）。
+
+本仓库的修改与新增功能（v2 动态界面、菜单栏常驻状态、单实例、
+macOS 26/27 Command Line Tools 编译兼容、Shadowrocket 安装流程等）
+Copyright (c) 2026 zzc920-art，同样以 MIT 许可发布。
