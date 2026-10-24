@@ -109,6 +109,7 @@ installer/              # macOS 安装/卸载
 windows/ linux/         # Windows / Linux 移植版（Beta）
 docs/                   # Web 检测页（GitHub Pages）
 scripts/gen-sums.sh     # 重新生成 SHA256SUMS
+scripts/sync-upstream.sh # 上游同步 + 品牌统一 + 测试 + 可选本机部署
 tests/                  # 隔离回归测试 + 测试用例（测试用例.md）
 ```
 

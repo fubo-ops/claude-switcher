@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.4（2026-10-24）
+
+### 新增
+- `scripts/sync-upstream.sh`：上游同步自动化
+  - 拉取原仓库 → cherry-pick 新提交 → 统一仓库地址 → 重算 SHA256SUMS
+  - 自动跑回归单测 + 编译 + `--selftest`，全部通过才推送 `origin/main`
+  - `--deploy`：同步后自动更新本机核心脚本/STUN 探针/App（保留代理与地区配置，check 失败自动回滚）
+  - 冲突或测试失败时不动仓库、不部署，只报告
+
+
 ## v2.3（2026-10-24）
 
 ### 变更
