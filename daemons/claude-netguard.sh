@@ -1,6 +1,7 @@
 #!/bin/bash
 # Claude 切换器 - 网络自动恢复守护（用户态 LaunchAgent）
 # 隧道异常中断且“最近还在正常使用”时自动重连；三档策略：scutil start → 拉起客户端 → 重启客户端。
+# 恢复后若断网前 Claude 在运行，则通过 check 后自动重新打开（避免保镖杀进程后一直空着）。
 # 失败每 20s 重试，最长 5 分钟；用户主动关闭代理超过 5 分钟后不再介入。
 set -u
 export LC_ALL=en_US.UTF-8
@@ -19,6 +20,8 @@ BASE="$H/.claude-switcher"
 STATE="$BASE/netguard.state"
 COOLDOWN="$BASE/netguard.cooldown"
 LOG="$H/Library/Logs/claude-netguard.log"
+SW="$H/.local/bin/claude-switch.sh"
+CLAUDE_STATE="$BASE/netguard.claude"
 mkdir -p "$BASE"
 now=$(date +%s)
 
@@ -43,6 +46,11 @@ proxy_up() {
 
 if tun_up && proxy_up; then
   echo "$now ok" > "$STATE"
+  if pgrep -f '/Applications/Claude.app/Contents/MacOS/Claude' >/dev/null 2>&1; then
+    echo running > "$CLAUDE_STATE"
+  else
+    echo stopped > "$CLAUDE_STATE"
+  fi
   exit 0
 fi
 
@@ -59,6 +67,20 @@ echo "$now" > "$COOLDOWN"
 
 echo "$(date '+%F %T') 隧道中断 ${down}s，尝试自动恢复 (mode=$MODE service=$SERVICE)" >> "$LOG"
 
+# 隧道恢复后，如果断网前 Claude 正在运行，则通过安检后自动重新打开
+restore_claude() {
+  [ "$(cat "$CLAUDE_STATE" 2>/dev/null)" = "running" ] || return 0
+  pgrep -f '/Applications/Claude.app/Contents/MacOS/Claude' >/dev/null 2>&1 && return 0
+  if "$SW" check >/dev/null 2>&1; then
+    if open -a "Claude" >/dev/null 2>&1; then
+      echo "$(date '+%F %T') 隧道恢复后自动重新打开 Claude（账号 $(cat "$BASE/current" 2>/dev/null)）" >> "$LOG"
+      echo stopped > "$CLAUDE_STATE"
+    fi
+  else
+    echo "$(date '+%F %T') 隧道已恢复但环境检查未过，未自动打开 Claude" >> "$LOG"
+  fi
+}
+
 try_ok() {  # $1=策略名 $2=最多等待秒数
   local i
   for i in $(seq 1 "$2"); do
@@ -66,6 +88,7 @@ try_ok() {  # $1=策略名 $2=最多等待秒数
     if tun_up; then
       echo "$(date '+%F %T') 恢复成功($1, ${i}s)" >> "$LOG"
       echo "$(date +%s) ok" > "$STATE"
+      restore_claude
       exit 0
     fi
   done
