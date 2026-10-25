@@ -44,11 +44,30 @@ proxy_up() {
   esac
 }
 
+# 最近 10 分钟内是否被保镖杀过（用于网络恢复后自动重开 Claude）
+recent_bodyguard_kill() {
+  local line ts epoch now now2
+  [ -f "$H/Library/Logs/claude-bodyguard.log" ] || return 1
+  line=$(tail -1 "$H/Library/Logs/claude-bodyguard.log")
+  case "$line" in *代理离线*) ;; *) return 1 ;; esac
+  ts=$(echo "$line" | cut -d' ' -f1-2)
+  epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$ts" +%s 2>/dev/null) || return 1
+  now2=$(date +%s)
+  [ $((now2 - epoch)) -le 600 ]
+}
+
 if tun_up && proxy_up; then
   echo "$now ok" > "$STATE"
   if pgrep -f '/Applications/Claude.app/Contents/MacOS/Claude' >/dev/null 2>&1; then
     echo running > "$CLAUDE_STATE"
   else
+    if [ "$(cat "$CLAUDE_STATE" 2>/dev/null)" = "running" ] && recent_bodyguard_kill; then
+      if "$SW" check >/dev/null 2>&1; then
+        if open -a "Claude" >/dev/null 2>&1; then
+          echo "$(date '+%F %T') 网络已恢复且检测到 Claude 刚被保镖关闭，自动重新打开（账号 $(cat "$BASE/current" 2>/dev/null)）" >> "$LOG"
+        fi
+      fi
+    fi
     echo stopped > "$CLAUDE_STATE"
   fi
   exit 0
