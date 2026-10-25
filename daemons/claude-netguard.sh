@@ -22,6 +22,8 @@ COOLDOWN="$BASE/netguard.cooldown"
 LOG="$H/Library/Logs/claude-netguard.log"
 SW="$H/.local/bin/claude-switch.sh"
 CLAUDE_STATE="$BASE/netguard.claude"
+DOWNSINCE="$BASE/netguard.downsince"
+NOTIFIED="$BASE/netguard.notified"
 mkdir -p "$BASE"
 now=$(date +%s)
 
@@ -58,6 +60,11 @@ recent_bodyguard_kill() {
 
 if tun_up && proxy_up; then
   echo "$now ok" > "$STATE"
+  if [ -f "$DOWNSINCE" ]; then
+    since=$(cat "$DOWNSINCE" 2>/dev/null || echo "$now")
+    echo "$(date '+%F %T') 隧道已恢复（本段断开 $((now - since))s）" >> "$LOG"
+    rm -f "$DOWNSINCE" "$NOTIFIED"
+  fi
   if pgrep -f '/Applications/Claude.app/Contents/MacOS/Claude' >/dev/null 2>&1; then
     echo running > "$CLAUDE_STATE"
   else
@@ -76,6 +83,15 @@ fi
 last=$(awk '{print $1}' "$STATE" 2>/dev/null)
 last=${last:-$now}
 down=$((now - last))
+[ -f "$DOWNSINCE" ] || echo "$now" > "$DOWNSINCE"
+if [ "$down" -ge 45 ]; then
+  since0=$(cat "$DOWNSINCE" 2>/dev/null || echo "$now")
+  if [ "$(cat "$NOTIFIED" 2>/dev/null)" != "$since0" ]; then
+    osascript -e "display notification \"VPN 已断开 ${down}s，正在自动恢复…\" with title \"Claude 切换器\"" >/dev/null 2>&1 || true
+    echo "$since0" > "$NOTIFIED"
+    echo "$(date '+%F %T') 隧道已断开 ${down}s，发送通知" >> "$LOG"
+  fi
+fi
 # 只在“最近 5 分钟内还好用”且已断 >=15s 时介入，避免跟用户主动关代理打架
 grep -q ' ok$' "$STATE" 2>/dev/null || exit 0
 [ "$down" -lt 300 ] || exit 0
@@ -105,8 +121,10 @@ try_ok() {  # $1=策略名 $2=最多等待秒数
   for i in $(seq 1 "$2"); do
     sleep 1
     if tun_up; then
-      echo "$(date '+%F %T') 恢复成功($1, ${i}s)" >> "$LOG"
+      since1=$(cat "$DOWNSINCE" 2>/dev/null || echo "$now")
+      echo "$(date '+%F %T') 恢复成功($1, ${i}s)，本段断开 $(( $(date +%s) - since1 ))s" >> "$LOG"
       echo "$(date +%s) ok" > "$STATE"
+      rm -f "$DOWNSINCE" "$NOTIFIED"
       restore_claude
       exit 0
     fi
@@ -135,4 +153,9 @@ if [ -n "$APP" ]; then
   try_ok "restart app" 10
 fi
 
-echo "$(date '+%F %T') 自动恢复失败，20s 后重试" >> "$LOG"
+since2=$(cat "$DOWNSINCE" 2>/dev/null || echo "$now")
+if [ "$(cat "$NOTIFIED" 2>/dev/null)" != "$since2" ]; then
+  osascript -e "display notification \"VPN 恢复失败，请检查代理/节点\" with title \"Claude 切换器\"" >/dev/null 2>&1 || true
+  echo "$since2" > "$NOTIFIED"
+fi
+echo "$(date '+%F %T') 自动恢复失败，20s 后重试（已断开 $(( $(date +%s) - since2 ))s）" >> "$LOG"
