@@ -94,7 +94,9 @@ if [ "$down" -ge 45 ]; then
 fi
 # 只在“最近 5 分钟内还好用”且已断 >=15s 时介入，避免跟用户主动关代理打架
 grep -q ' ok$' "$STATE" 2>/dev/null || exit 0
-[ "$down" -lt 300 ] || exit 0
+# 用“首次观察到断开”的时间计算观察窗，避免睡眠/唤醒后 down 很大而永远不尝试恢复
+obs=$((now - $(cat "$DOWNSINCE" 2>/dev/null || echo "$now")))
+[ "$obs" -lt 300 ] || exit 0
 [ "$down" -ge 15 ] || exit 0
 cd_ts=$(cat "$COOLDOWN" 2>/dev/null || echo 0)
 [ $((now - cd_ts)) -lt 20 ] && exit 0
