@@ -125,4 +125,4 @@ tests/                  # 隔离回归测试 + 测试用例（测试用例.md）
 
 ## 来源与许可
 
-MIT License。本项目包含来自开源项目 `claude-switcher` 的代码与设计，原始版权声明保留在 [LICENSE](LICENSE) 中，衍生说明见 [NOTICE](NOTICE)。本仓库的修改与新增功能版权归 zzc920-art 所有。
+MIT License。本仓库的修改与新增功能版权归 zzc920-art 所有。
